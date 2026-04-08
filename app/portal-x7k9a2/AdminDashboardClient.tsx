@@ -14,12 +14,12 @@ type Quote = {
   created_at: string;
 };
 
-type Props = {
+export default function AdminDashboardClient({
+  initialQuotes,
+}: {
   initialQuotes: Quote[];
-};
-
-export default function AdminDashboardClient({ initialQuotes }: Props) {
-  const [quotes, setQuotes] = useState<Quote[]>(initialQuotes);
+}) {
+  const [quotes, setQuotes] = useState(initialQuotes);
   const [toast, setToast] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -28,15 +28,18 @@ export default function AdminDashboardClient({ initialQuotes }: Props) {
     const term = search.trim().toLowerCase();
     if (!term) return quotes;
 
-    return quotes.filter((q) => {
-      return (
-        q.customer_name?.toLowerCase().includes(term) ||
-        q.customer_phone?.toLowerCase().includes(term) ||
-        q.pickup_address?.toLowerCase().includes(term) ||
-        q.dropoff_address?.toLowerCase().includes(term) ||
-        q.status?.toLowerCase().includes(term)
-      );
-    });
+    return quotes.filter((q) =>
+      [
+        q.customer_name,
+        q.customer_phone,
+        q.pickup_address,
+        q.dropoff_address,
+        q.status,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(term)
+    );
   }, [quotes, search]);
 
   const totalQuotes = filteredQuotes.length;
@@ -48,12 +51,11 @@ export default function AdminDashboardClient({ initialQuotes }: Props) {
 
   const showToast = (message: string) => {
     setToast(message);
-    window.setTimeout(() => setToast(null), 2500);
+    window.setTimeout(() => setToast(null), 2400);
   };
 
   const handleDelete = async (id: string) => {
-    const confirmed = window.confirm("Delete this quote?");
-    if (!confirmed) return;
+    if (!window.confirm("Delete this quote?")) return;
 
     setDeletingId(id);
 
@@ -79,29 +81,29 @@ export default function AdminDashboardClient({ initialQuotes }: Props) {
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(249,115,22,0.12),transparent_28%),linear-gradient(180deg,#020617_0%,#081133_55%,#020617_100%)] px-6 py-10 text-white">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,106,0,0.14),transparent_28%),linear-gradient(180deg,#050816_0%,#0B1220_55%,#050816_100%)] px-6 py-10 pt-28 text-white">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur md:flex-row md:items-center md:justify-between">
+        <div className="mb-6 flex flex-col gap-4 rounded-[32px] border border-white/10 bg-white/[0.04] p-6 shadow-[0_0_40px_rgba(0,0,0,0.35)] backdrop-blur md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-orange-300">
               M60 Recovery & Rescue
             </p>
             <h1 className="mt-2 text-4xl font-semibold">Admin Dashboard</h1>
             <p className="mt-2 text-slate-300">
-              Manage quotes, leads, WhatsApp contact, and exports.
+              Manage leads, quotes, exports, and customer follow-up.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
             <a
               href="/api/admin-export"
-              className="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-400"
+              className="rounded-2xl bg-[#FF6A00] px-4 py-3 font-semibold text-white shadow-[0_0_25px_rgba(255,106,0,0.18)] transition hover:bg-[#ff7b24]"
             >
               Export leads CSV
             </a>
 
             <form action="/api/admin-logout" method="post">
-              <button className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-semibold text-white transition hover:bg-white/10">
+              <button className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 font-semibold text-white transition hover:bg-white/[0.08]">
                 Logout
               </button>
             </form>
@@ -109,25 +111,27 @@ export default function AdminDashboardClient({ initialQuotes }: Props) {
         </div>
 
         <div className="mb-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur">
             <div className="text-sm text-slate-400">Total Quotes</div>
             <div className="mt-2 text-3xl font-semibold">{totalQuotes}</div>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur">
             <div className="text-sm text-slate-400">Total Revenue</div>
             <div className="mt-2 text-3xl font-semibold">
               £{totalRevenue.toFixed(0)}
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
-            <div className="text-sm text-slate-400">New Leads</div>
-            <div className="mt-2 text-3xl font-semibold">{newLeads}</div>
+          <div className="rounded-3xl border border-orange-500/20 bg-[#FF6A00]/10 p-5 shadow-[0_0_30px_rgba(255,106,0,0.08)]">
+            <div className="text-sm text-orange-200">New Leads</div>
+            <div className="mt-2 text-3xl font-semibold text-white">
+              {newLeads}
+            </div>
           </div>
         </div>
 
-        <div className="mb-6 rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+        <div className="mb-6 rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -136,9 +140,9 @@ export default function AdminDashboardClient({ initialQuotes }: Props) {
           />
         </div>
 
-        <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur">
+        <div className="overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.04] backdrop-blur">
           <table className="w-full text-left">
-            <thead className="bg-white/5 text-sm text-slate-300">
+            <thead className="bg-white/[0.04] text-sm text-slate-300">
               <tr>
                 <th className="px-4 py-4">Customer</th>
                 <th className="px-4 py-4">Route</th>
@@ -156,11 +160,9 @@ export default function AdminDashboardClient({ initialQuotes }: Props) {
                   /\D/g,
                   ""
                 );
-
                 const whatsappPhone = cleanedPhone.startsWith("0")
                   ? `44${cleanedPhone.slice(1)}`
                   : cleanedPhone;
-
                 const whatsappText = encodeURIComponent(
                   `Hi ${q.customer_name}, your recovery quote is £${q.quoted_amount}. Pickup: ${q.pickup_address}. Drop-off: ${q.dropoff_address}.`
                 );
@@ -168,7 +170,7 @@ export default function AdminDashboardClient({ initialQuotes }: Props) {
                 return (
                   <tr
                     key={q.id}
-                    className="border-t border-white/10 transition hover:bg-white/5"
+                    className="border-t border-white/10 transition hover:bg-white/[0.05]"
                   >
                     <td className="px-4 py-4">
                       <div className="font-medium">{q.customer_name}</div>
@@ -186,7 +188,7 @@ export default function AdminDashboardClient({ initialQuotes }: Props) {
                     <td className="px-4 py-4 font-medium">£{q.quoted_amount}</td>
 
                     <td className="px-4 py-4">
-                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm">
+                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-sm">
                         {q.status}
                       </span>
                     </td>
@@ -240,7 +242,7 @@ export default function AdminDashboardClient({ initialQuotes }: Props) {
       </div>
 
       {toast && (
-        <div className="fixed right-5 top-5 z-50 rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white shadow-2xl">
+        <div className="fixed right-5 top-24 z-50 rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white shadow-2xl">
           {toast}
         </div>
       )}
