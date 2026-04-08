@@ -21,9 +21,9 @@ const featureCards = [
 
 const serviceCards = [
   "Vehicle Recovery",
-  "Breakdown Help",
-  "Jump Starts",
-  "Roadside Assistance",
+  "Off-Road Rescue",
+  "Vehicle Transportation",
+  "New Car Purchases",
 ];
 
 export default function HomePage() {
@@ -143,7 +143,7 @@ export default function HomePage() {
                 Our Services
               </p>
               <h3 className="mt-3 text-4xl font-semibold">
-                Recovery services designed for urgent callouts
+                From Mud to Motorway, We Pull Through
               </h3>
             </div>
 
