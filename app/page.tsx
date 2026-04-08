@@ -36,7 +36,7 @@ export default function HomePage() {
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
                 href="/quote"
-                className="rounded-2xl bg-orange-500 px-6 py-4 text-lg font-semibold text-white transition hover:bg-orange-400"
+                className="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-6 py-4 text-lg font-semibold text-white transition hover:bg-orange-400"
               >
                 Get your quote
               </Link>
@@ -45,7 +45,7 @@ export default function HomePage() {
                 href="https://wa.me/447908831617"
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-2xl border border-white/15 bg-white/5 px-6 py-4 text-lg font-semibold text-white transition hover:bg-white/10"
+                className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-6 py-4 text-lg font-semibold text-white transition hover:bg-white/10"
               >
                 WhatsApp us
               </a>
