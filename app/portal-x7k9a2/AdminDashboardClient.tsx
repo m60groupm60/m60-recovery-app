@@ -8,6 +8,7 @@ type Quote = {
   customer_phone: string;
   pickup_address: string;
   dropoff_address: string;
+  service_type: string;
   quoted_amount: number;
   distance_miles: number;
   status: string;
@@ -24,6 +25,13 @@ export default function AdminDashboardClient({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
+  const serviceLabels: Record<string, string> = {
+    vehicle_recovery: "Vehicle Recovery",
+    off_road_rescue: "Off-Road Rescue",
+    vehicle_transportation: "Vehicle Transportation",
+    new_car_purchases: "New Car Purchases",
+  };
+
   const filteredQuotes = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return quotes;
@@ -34,6 +42,7 @@ export default function AdminDashboardClient({
         q.customer_phone,
         q.pickup_address,
         q.dropoff_address,
+        q.service_type,
         q.status,
       ]
         .join(" ")
@@ -135,7 +144,7 @@ export default function AdminDashboardClient({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search customer, phone, route or status"
+            placeholder="Search customer, phone, route, service or status"
             className="w-full rounded-2xl border border-white/10 bg-slate-100 px-4 py-3 text-slate-950 outline-none"
           />
         </div>
@@ -146,6 +155,7 @@ export default function AdminDashboardClient({
               <tr>
                 <th className="px-4 py-4">Customer</th>
                 <th className="px-4 py-4">Route</th>
+                <th className="px-4 py-4">Service</th>
                 <th className="px-4 py-4">Miles</th>
                 <th className="px-4 py-4">Quote</th>
                 <th className="px-4 py-4">Status</th>
@@ -163,8 +173,9 @@ export default function AdminDashboardClient({
                 const whatsappPhone = cleanedPhone.startsWith("0")
                   ? `44${cleanedPhone.slice(1)}`
                   : cleanedPhone;
+
                 const whatsappText = encodeURIComponent(
-                  `Hi ${q.customer_name}, your recovery quote is £${q.quoted_amount}. Pickup: ${q.pickup_address}. Drop-off: ${q.dropoff_address}.`
+                  `Hi ${q.customer_name}, your ${serviceLabels[q.service_type] || q.service_type} quote is £${q.quoted_amount}. Pickup: ${q.pickup_address}. Drop-off: ${q.dropoff_address}.`
                 );
 
                 return (
@@ -182,6 +193,10 @@ export default function AdminDashboardClient({
                     <td className="px-4 py-4 text-sm">
                       <div>{q.pickup_address}</div>
                       <div className="text-slate-400">to {q.dropoff_address}</div>
+                    </td>
+
+                    <td className="px-4 py-4 text-sm">
+                      {serviceLabels[q.service_type] || q.service_type}
                     </td>
 
                     <td className="px-4 py-4">{q.distance_miles}</td>
@@ -224,7 +239,7 @@ export default function AdminDashboardClient({
               {filteredQuotes.length === 0 && (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-4 py-10 text-center text-slate-400"
                   >
                     No quotes found.

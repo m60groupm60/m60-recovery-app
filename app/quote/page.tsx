@@ -7,6 +7,7 @@ export default function QuotePage() {
   const [phone, setPhone] = useState("");
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
+  const [serviceType, setServiceType] = useState("vehicle_recovery");
   const [distance, setDistance] = useState<number | null>(null);
   const [quote, setQuote] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -14,6 +15,13 @@ export default function QuotePage() {
 
   const ukPostcodeRegex =
     /^([A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2})$/i;
+
+  const serviceLabels: Record<string, string> = {
+    vehicle_recovery: "Vehicle Recovery",
+    off_road_rescue: "Off-Road Rescue",
+    vehicle_transportation: "Vehicle Transportation",
+    new_car_purchases: "New Car Purchases",
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +60,7 @@ export default function QuotePage() {
           customer_phone: phone,
           pickup_address: pickupValue,
           dropoff_address: dropoffValue,
+          service_type: serviceType,
         }),
       });
 
@@ -75,6 +84,7 @@ export default function QuotePage() {
     `Hello M60 Recovery & Rescue, I would like a quote.
 Name: ${name}
 Phone: ${phone}
+Service: ${serviceLabels[serviceType]}
 Pickup: ${pickup}
 Drop-off: ${dropoff}
 Distance: ${distance ?? ""}
@@ -95,8 +105,7 @@ Quote: £${quote ?? ""}`
             </h1>
 
             <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-300">
-              Enter your details and two postcodes to get a live recovery quote
-              instantly.
+              Enter your details, choose a service, and get a live recovery quote instantly.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-10 space-y-5">
@@ -122,6 +131,22 @@ Quote: £${quote ?? ""}`
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-300">
+                  Service type
+                </label>
+                <select
+                  value={serviceType}
+                  onChange={(e) => setServiceType(e.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-slate-100 px-5 py-4 text-lg text-slate-950 outline-none transition focus:border-orange-400"
+                >
+                  <option value="vehicle_recovery">Vehicle Recovery</option>
+                  <option value="off_road_rescue">Off-Road Rescue</option>
+                  <option value="vehicle_transportation">Vehicle Transportation</option>
+                  <option value="new_car_purchases">New Car Purchases</option>
+                </select>
               </div>
 
               <div>
@@ -178,6 +203,13 @@ Quote: £${quote ?? ""}`
             </p>
 
             <div className="mt-8 space-y-4">
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+                <p className="text-sm text-slate-400">Service</p>
+                <p className="mt-2 text-2xl font-semibold">
+                  {serviceLabels[serviceType]}
+                </p>
+              </div>
+
               <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
                 <p className="text-sm text-slate-400">Distance</p>
                 <p className="mt-2 text-3xl font-semibold">

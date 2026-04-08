@@ -7,7 +7,7 @@ export default async function AdminDashboardPage() {
   const { data: quotes, error } = await supabase
     .from("quotes")
     .select(
-      "id, customer_name, customer_phone, pickup_address, dropoff_address, quoted_amount, distance_miles, status, created_at"
+      "id, customer_name, customer_phone, pickup_address, dropoff_address, service_type, quoted_amount, distance_miles, status, created_at"
     )
     .order("created_at", { ascending: false });
 
