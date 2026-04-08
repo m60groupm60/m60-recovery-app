@@ -6,11 +6,20 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function GET() {
-  const { data, error } = await supabaseAdmin
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const activeOnly = url.searchParams.get("active");
+
+  let query = supabaseAdmin
     .from("service_types")
     .select("id, name, slug, base_fare, per_mile, is_active, sort_order")
     .order("sort_order", { ascending: true });
+
+  if (activeOnly === "true") {
+    query = query.eq("is_active", true);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
