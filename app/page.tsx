@@ -39,11 +39,10 @@ export default function HomePage() {
         <section className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="rounded-[36px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,106,0,0.05))] p-8 shadow-[0_0_60px_rgba(0,0,0,0.35)] backdrop-blur md:p-10">
             <div className="inline-flex rounded-full border border-[#ff6a00]/30 bg-[#ff6a00]/10 px-5 py-2 text-sm uppercase tracking-[0.22em] text-orange-300">
-              24/7 Manchester recovery
+              24/7 Manchester Breakdown
             </div>
 
             <h1 className="mt-8 max-w-4xl text-6xl font-semibold leading-[1.02] tracking-tight md:text-7xl">
-              Fast vehicle recovery quotes with a premium booking experience.
             </h1>
 
             <p className="mt-6 max-w-2xl text-xl leading-8 text-slate-300">
@@ -141,7 +140,7 @@ export default function HomePage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-sm uppercase tracking-[0.24em] text-orange-300">
-                My services
+                Our Services
               </p>
               <h3 className="mt-3 text-4xl font-semibold">
                 Recovery services designed for urgent callouts
