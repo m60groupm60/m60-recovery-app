@@ -2,28 +2,23 @@
 
 import { useState } from "react";
 
-type QuoteResult = {
-  id: string;
-  quoted_amount: number;
-  distance_miles: number;
-};
-
 export default function QuotePage() {
-  const [form, setForm] = useState({
-    customer_name: "",
-    customer_phone: "",
-    pickup_address: "",
-    dropoff_address: "",
-  });
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [pickup, setPickup] = useState("");
+  const [dropoff, setDropoff] = useState("");
 
+  const [distance, setDistance] = useState<number | null>(null);
+  const [quote, setQuote] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<QuoteResult | null>(null);
   const [error, setError] = useState("");
 
-  async function handleSubmit() {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     setError("");
-    setResult(null);
+    setDistance(null);
+    setQuote(null);
 
     try {
       const res = await fetch("/api/quote", {
@@ -31,109 +26,107 @@ export default function QuotePage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          customer_name: name,
+          customer_phone: phone,
+          pickup_address: pickup,
+          dropoff_address: dropoff,
+        }),
       });
 
-      const data = await res.json();
+      const result = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || "Something went wrong");
-      } else {
-        setResult(data);
+      if (!res.ok || result.error) {
+        setError(result.error || "Something went wrong");
+        return;
       }
+
+      setDistance(result.distance ?? null);
+      setQuote(result.quote ?? null);
     } catch {
-      setError("Could not connect to the server");
+      setError("Could not connect to the quote service");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const whatsappText = encodeURIComponent(
-    `Hello M60 Recovery & Rescue, I would like help.
-Name: ${form.customer_name}
-Phone: ${form.customer_phone}
-Pickup: ${form.pickup_address}
-Drop-off: ${form.dropoff_address}
-Quote: £${result?.quoted_amount ?? ""}`
+    `Hello M60 Recovery & Rescue, I would like a quote.
+Name: ${name}
+Phone: ${phone}
+Pickup: ${pickup}
+Drop-off: ${dropoff}
+Distance: ${distance ?? ""}
+Quote: £${quote ?? ""}`
   );
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-16 text-white">
-      <div className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/5 p-8">
-        <h1 className="text-4xl font-semibold">Get your quote</h1>
-        <p className="mt-3 text-slate-300">
+      <div className="mx-auto max-w-5xl rounded-[32px] border border-white/10 bg-[#081133] p-8 shadow-2xl md:p-12">
+        <h1 className="text-5xl font-semibold tracking-tight">Get your quote</h1>
+        <p className="mt-5 text-2xl text-slate-300">
           Fill in the details below to get a quote.
         </p>
 
-        <div className="mt-8 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-10 space-y-7">
           <input
-            className="w-full rounded-2xl border border-white/10 bg-slate-900 p-3 text-white"
+            className="w-full rounded-[28px] border border-white/10 bg-slate-200 px-6 py-6 text-2xl text-slate-950 outline-none"
             placeholder="Full name"
-            value={form.customer_name}
-            onChange={(e) =>
-              setForm({ ...form, customer_name: e.target.value })
-            }
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
 
           <input
-            className="w-full rounded-2xl border border-white/10 bg-slate-900 p-3 text-white"
+            className="w-full rounded-[28px] border border-white/10 bg-slate-200 px-6 py-6 text-2xl text-slate-950 outline-none"
             placeholder="Phone number"
-            value={form.customer_phone}
-            onChange={(e) =>
-              setForm({ ...form, customer_phone: e.target.value })
-            }
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
           />
 
           <input
-            className="w-full rounded-2xl border border-white/10 bg-slate-900 p-3 text-white"
+            className="w-full rounded-[28px] border border-white/10 bg-slate-200 px-6 py-6 text-2xl text-slate-950 outline-none"
             placeholder="Pickup address"
-            value={form.pickup_address}
-            onChange={(e) =>
-              setForm({ ...form, pickup_address: e.target.value })
-            }
+            value={pickup}
+            onChange={(e) => setPickup(e.target.value)}
           />
 
           <input
-            className="w-full rounded-2xl border border-white/10 bg-slate-900 p-3 text-white"
+            className="w-full rounded-[28px] border border-white/10 bg-slate-200 px-6 py-6 text-2xl text-slate-950 outline-none"
             placeholder="Drop-off address"
-            value={form.dropoff_address}
-            onChange={(e) =>
-              setForm({ ...form, dropoff_address: e.target.value })
-            }
+            value={dropoff}
+            onChange={(e) => setDropoff(e.target.value)}
           />
 
           <button
-            onClick={handleSubmit}
+            type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-orange-500 px-4 py-3 font-medium text-white hover:bg-orange-400 disabled:opacity-50"
+            className="w-full rounded-[28px] bg-orange-500 px-6 py-6 text-2xl font-medium text-white transition hover:bg-orange-400 disabled:opacity-50"
           >
             {loading ? "Calculating..." : "Calculate quote"}
           </button>
+        </form>
 
-          {error && (
-            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-red-200">
-              {error}
-            </div>
-          )}
+        {error && (
+          <div className="mt-8 rounded-[28px] border border-red-500/30 bg-red-500/10 p-6 text-2xl text-red-200">
+            {error}
+          </div>
+        )}
 
-          {result && (
-            <div className="rounded-2xl border border-white/10 bg-slate-900 p-4">
-              <p>Distance: {result.distance_miles} miles</p>
-              <p className="mt-2 text-2xl font-semibold">
-                Quote: £{result.quoted_amount}
-              </p>
+        {distance !== null && quote !== null && (
+          <div className="mt-8 rounded-[28px] border border-white/10 bg-[#071538] p-8">
+            <p className="text-2xl text-white">Distance: {distance} miles</p>
+            <p className="mt-5 text-5xl font-semibold text-white">Quote: £{quote}</p>
 
-              <a
-                href={`https://wa.me/447908831617?text=${whatsappText}`}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 inline-block rounded-2xl bg-white px-4 py-3 font-medium text-slate-950"
-              >
-                Send to WhatsApp
-              </a>
-            </div>
-          )}
-        </div>
+            <a
+              href={`https://wa.me/447908831617?text=${whatsappText}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-8 inline-block rounded-[24px] bg-white px-8 py-5 text-2xl font-medium text-slate-950"
+            >
+              Send to WhatsApp
+            </a>
+          </div>
+        )}
       </div>
     </main>
   );
