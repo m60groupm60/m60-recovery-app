@@ -117,12 +117,12 @@ export default function HomePage() {
               </div>
 
               <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-6">
-                <p className="font-medium text-white">What this system does</p>
+                <p className="font-medium text-white"></p>
                 <div className="mt-4 space-y-3 text-sm text-slate-300">
-                  <p>• Live distance-based pricing</p>
-                  <p>• Quote saved to your dashboard</p>
-                  <p>• WhatsApp handoff for rapid contact</p>
-                  <p>• Admin tools for leads and exports</p>
+                  <p>• </p>
+                  <p>• </p>
+                  <p>• </p>
+                  <p>• </p>
                 </div>
               </div>
             </div>
