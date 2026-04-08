@@ -18,13 +18,14 @@ export async function POST(request: Request) {
 
     const pickupPostcode = String(pickup_address || "").trim().toUpperCase();
     const dropoffPostcode = String(dropoff_address || "").trim().toUpperCase();
+    const serviceSlug = String(service_type || "").trim();
 
     if (
       !customer_name ||
       !customer_phone ||
       !pickupPostcode ||
       !dropoffPostcode ||
-      !service_type
+      !serviceSlug
     ) {
       return NextResponse.json(
         { error: "Please fill in all required fields" },
@@ -42,6 +43,20 @@ export async function POST(request: Request) {
     if (!ukPostcodeRegex.test(dropoffPostcode)) {
       return NextResponse.json(
         { error: "Invalid drop-off postcode" },
+        { status: 400 }
+      );
+    }
+
+    const { data: serviceRow, error: serviceError } = await supabase
+      .from("service_types")
+      .select("name, slug, base_fare, per_mile, is_active")
+      .eq("slug", serviceSlug)
+      .eq("is_active", true)
+      .single();
+
+    if (serviceError || !serviceRow) {
+      return NextResponse.json(
+        { error: "Invalid or inactive service type" },
         { status: 400 }
       );
     }
@@ -79,32 +94,8 @@ export async function POST(request: Request) {
 
     const distanceMiles = Math.round(distanceMeters / 1609.34);
 
-    let baseFare = 0;
-    let perMile = 0;
-
-    switch (service_type) {
-      case "vehicle_recovery":
-        baseFare = 25;
-        perMile = 2.0;
-        break;
-      case "off_road_rescue":
-        baseFare = 45;
-        perMile = 3.0;
-        break;
-      case "vehicle_transportation":
-        baseFare = 35;
-        perMile = 2.5;
-        break;
-      case "new_car_purchases":
-        baseFare = 30;
-        perMile = 2.2;
-        break;
-      default:
-        return NextResponse.json(
-          { error: "Invalid service type" },
-          { status: 400 }
-        );
-    }
+    const baseFare = Number(serviceRow.base_fare || 0);
+    const perMile = Number(serviceRow.per_mile || 0);
 
     const total = Math.round(baseFare + distanceMiles * perMile);
 
@@ -115,7 +106,7 @@ export async function POST(request: Request) {
         customer_phone,
         pickup_address: pickupPostcode,
         dropoff_address: dropoffPostcode,
-        service_type,
+        service_type: serviceRow.slug,
         out_of_hours: false,
         quoted_amount: total,
         distance_miles: distanceMiles,
@@ -133,6 +124,12 @@ export async function POST(request: Request) {
       success: true,
       quote: total,
       distance: distanceMiles,
+      service: {
+        name: serviceRow.name,
+        slug: serviceRow.slug,
+        base_fare: baseFare,
+        per_mile: perMile,
+      },
       data,
     });
   } catch (err: any) {
