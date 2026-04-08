@@ -94,13 +94,11 @@ export default function HomePage() {
             </p>
 
             <h2 className="mt-5 text-5xl font-semibold leading-tight">
-              Built for fast roadside bookings and real customer trust.
+              ........ .........
             </h2>
 
             <p className="mt-5 text-lg leading-8 text-slate-300">
-              A cleaner, faster way for customers to request help without
-              back-and-forth calls. Ideal for urgent breakdowns and recovery
-              jobs across Manchester and nearby areas.
+              ........ .........
             </p>
 
             <div className="mt-8 space-y-5">
