@@ -1,114 +1,114 @@
-"use client";
+import { NextResponse } from "next/server";
+import { supabase } from "../../../lib/supabase";
 
-import { useState } from "react";
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
 
-export default function QuotePage() {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [pickup, setPickup] = useState("");
-  const [dropoff, setDropoff] = useState("");
+    const {
+      customer_name,
+      customer_phone,
+      pickup_address,
+      dropoff_address,
+    } = body;
 
-  const [distance, setDistance] = useState<number | null>(null);
-  const [quote, setQuote] = useState<number | null>(null);
+    const ukPostcodeRegex =
+      /^([A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2})$/i;
 
-  const ukPostcodeRegex =
-    /^([A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2})$/i;
+    const pickupPostcode = String(pickup_address || "").trim().toUpperCase();
+    const dropoffPostcode = String(dropoff_address || "").trim().toUpperCase();
 
-  const handleSubmit = async () => {
-    const pickupValue = pickup.trim().toUpperCase();
-    const dropoffValue = dropoff.trim().toUpperCase();
-
-    if (!pickupValue || !dropoffValue) {
-      alert("Please enter both pickup and dropoff postcodes");
-      return;
+    if (
+      !customer_name ||
+      !customer_phone ||
+      !pickupPostcode ||
+      !dropoffPostcode
+    ) {
+      return NextResponse.json(
+        { error: "Please fill in all required fields" },
+        { status: 400 }
+      );
     }
 
-    if (!ukPostcodeRegex.test(pickupValue)) {
-      alert("Please enter a valid UK pickup postcode");
-      return;
+    if (!ukPostcodeRegex.test(pickupPostcode)) {
+      return NextResponse.json(
+        { error: "Invalid pickup postcode" },
+        { status: 400 }
+      );
     }
 
-    if (!ukPostcodeRegex.test(dropoffValue)) {
-      alert("Please enter a valid UK dropoff postcode");
-      return;
+    if (!ukPostcodeRegex.test(dropoffPostcode)) {
+      return NextResponse.json(
+        { error: "Invalid dropoff postcode" },
+        { status: 400 }
+      );
     }
 
-    try {
-      const res = await fetch("/api/quote", {
+    const mapsRes = await fetch(
+      "https://routes.googleapis.com/directions/v2:computeRoutes",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY!,
+          "X-Goog-FieldMask": "routes.distanceMeters",
         },
         body: JSON.stringify({
-          customer_name: name,
-          customer_phone: phone,
-          pickup_address: pickupValue,
-          dropoff_address: dropoffValue,
+          origin: {
+            address: pickupPostcode,
+          },
+          destination: {
+            address: dropoffPostcode,
+          },
+          travelMode: "DRIVE",
         }),
-      });
-
-      const data = await res.json();
-
-      if (data.error) {
-        alert(data.error);
-        return;
       }
+    );
 
-      setDistance(data.distance);
-      setQuote(data.quote);
-    } catch {
-      alert("Something went wrong");
+    const mapsData = await mapsRes.json();
+    const distanceMeters = mapsData?.routes?.[0]?.distanceMeters;
+
+    if (!distanceMeters) {
+      return NextResponse.json(
+        { error: "Could not calculate distance" },
+        { status: 500 }
+      );
     }
-  };
 
-  return (
-    <div className="p-6 max-w-xl mx-auto text-white">
-      <h1 className="text-3xl font-bold mb-2">Get your quote</h1>
-      <p className="mb-6">Fill in the details below to get a quote.</p>
+    const distanceMiles = Math.round(distanceMeters / 1609.34);
+    const total = distanceMiles * 2;
 
-      <div className="space-y-4">
-        <input
-          className="w-full p-3 rounded text-black"
-          placeholder="Your name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+    const { data, error } = await supabase
+      .from("quotes")
+      .insert({
+        customer_name,
+        customer_phone,
+        pickup_address: pickupPostcode,
+        dropoff_address: dropoffPostcode,
+        service_type: "standard",
+        out_of_hours: false,
+        quoted_amount: total,
+        distance_miles: distanceMiles,
+        payment_status: "pending",
+        status: "new",
+      })
+      .select()
+      .single();
 
-        <input
-          className="w-full p-3 rounded text-black"
-          placeholder="Your phone number"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
-        <input
-          className="w-full p-3 rounded text-black"
-          placeholder="Pickup postcode (e.g. M11 4JG)"
-          value={pickup}
-          onChange={(e) => setPickup(e.target.value)}
-        />
-
-        <input
-          className="w-full p-3 rounded text-black"
-          placeholder="Dropoff postcode (e.g. OL10 2EF)"
-          value={dropoff}
-          onChange={(e) => setDropoff(e.target.value)}
-        />
-
-        <button
-          onClick={handleSubmit}
-          className="w-full bg-orange-500 p-3 rounded font-semibold"
-        >
-          Calculate quote
-        </button>
-      </div>
-
-      {distance !== null && quote !== null && (
-        <div className="mt-6 p-4 border rounded">
-          <p>Distance: {distance} miles</p>
-          <h2 className="text-xl font-bold">Quote: £{quote}</h2>
-        </div>
-      )}
-    </div>
-  );
+    return NextResponse.json({
+      success: true,
+      quote: total,
+      distance: distanceMiles,
+      data,
+    });
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err.message || "Something went wrong" },
+      { status: 500 }
+    );
+  }
 }
