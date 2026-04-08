@@ -105,6 +105,20 @@ export default function AdminDashboardClient({
 
           <div className="flex flex-wrap gap-3">
             <a
+              href="/portal-x7k9a2"
+              className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 font-semibold text-white transition hover:bg-white/[0.08]"
+            >
+              Dashboard
+            </a>
+
+            <a
+              href="/portal-x7k9a2/services"
+              className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 font-semibold text-white transition hover:bg-white/[0.08]"
+            >
+              Services
+            </a>
+
+            <a
               href="/api/admin-export"
               className="rounded-2xl bg-[#FF6A00] px-4 py-3 font-semibold text-white shadow-[0_0_25px_rgba(255,106,0,0.18)] transition hover:bg-[#ff7b24]"
             >
@@ -170,12 +184,15 @@ export default function AdminDashboardClient({
                   /\D/g,
                   ""
                 );
+
                 const whatsappPhone = cleanedPhone.startsWith("0")
                   ? `44${cleanedPhone.slice(1)}`
                   : cleanedPhone;
 
                 const whatsappText = encodeURIComponent(
-                  `Hi ${q.customer_name}, your ${serviceLabels[q.service_type] || q.service_type} quote is £${q.quoted_amount}. Pickup: ${q.pickup_address}. Drop-off: ${q.dropoff_address}.`
+                  `Hi ${q.customer_name}, your ${
+                    serviceLabels[q.service_type] || q.service_type
+                  } quote is £${q.quoted_amount}. Pickup: ${q.pickup_address}. Drop-off: ${q.dropoff_address}.`
                 );
 
                 return (
