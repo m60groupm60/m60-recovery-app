@@ -5,13 +5,13 @@ export default function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/75 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <a href="/" className="flex items-center gap-3">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-2 transition duration-300 hover:scale-105 hover:bg-white/10">
+          <div className="rounded-xl border border-white/10 bg-white/5 p-2">
             <Image
               src="/logo.png"
               alt="M60 Recovery & Rescue"
-              width={120}
-              height={40}
-              className="h-10 w-auto"
+              width={180}
+              height={60}
+              className="h-12 w-auto"
               priority
             />
           </div>
