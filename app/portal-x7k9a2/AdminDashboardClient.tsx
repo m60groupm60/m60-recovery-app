@@ -63,15 +63,6 @@ export default function AdminDashboardClient({
     (q) => q.service_type === "emergency_breakdown"
   ).length;
 
-  const revenueByService = filteredQuotes.reduce<Record<string, number>>(
-    (acc, q) => {
-      const key = serviceLabels[q.service_type] || q.service_type;
-      acc[key] = (acc[key] || 0) + Number(q.quoted_amount || 0);
-      return acc;
-    },
-    {}
-  );
-
   const showToast = (message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(null), 2400);
@@ -133,6 +124,13 @@ export default function AdminDashboardClient({
             </a>
 
             <a
+              href="/portal-x7k9a2/pricing"
+              className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 font-semibold text-white transition hover:bg-white/[0.08]"
+            >
+              Pricing
+            </a>
+
+            <a
               href="/api/admin-export"
               className="rounded-2xl bg-[#FF6A00] px-4 py-3 font-semibold text-white shadow-[0_0_25px_rgba(255,106,0,0.18)] transition hover:bg-[#ff7b24]"
             >
@@ -173,20 +171,6 @@ export default function AdminDashboardClient({
               {emergencyJobs}
             </div>
           </div>
-        </div>
-
-        <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {Object.entries(revenueByService).map(([service, value]) => (
-            <div
-              key={service}
-              className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur"
-            >
-              <div className="text-sm text-slate-400">{service}</div>
-              <div className="mt-2 text-2xl font-semibold">
-                £{value.toFixed(0)}
-              </div>
-            </div>
-          ))}
         </div>
 
         <div className="mb-6 rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur">
@@ -231,7 +215,6 @@ export default function AdminDashboardClient({
                 );
 
                 const isEmergency = q.service_type === "emergency_breakdown";
-                const isHotLead = isEmergency || Number(q.quoted_amount || 0) > 100;
 
                 return (
                   <tr
@@ -245,11 +228,6 @@ export default function AdminDashboardClient({
                       <div className="text-sm text-slate-400">
                         {q.customer_phone}
                       </div>
-                      {isHotLead && (
-                        <div className="mt-2 inline-flex rounded-full bg-orange-500/20 px-2 py-1 text-xs font-semibold text-orange-200">
-                          🔥 HIGH VALUE
-                        </div>
-                      )}
                     </td>
 
                     <td className="px-4 py-4 text-sm">
@@ -316,10 +294,6 @@ export default function AdminDashboardClient({
             </tbody>
           </table>
         </div>
-
-        <p className="mt-4 text-sm text-slate-400">
-          WhatsApp buttons open automatically after quote on the customer page, and admin can still open each lead manually here.
-        </p>
       </div>
 
       {toast && (
