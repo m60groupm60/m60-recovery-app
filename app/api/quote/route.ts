@@ -10,10 +10,24 @@ function isOutOfHours(
   const day = date.getDay(); // 0 Sunday, 6 Saturday
   const hour = date.getHours();
 
-  const weekend = weekendEnabled && (day === 0 || day === 6);
-  const weekdayLate = hour >= weekdayStartHour || hour < weekdayEndHour;
+  const isWeekend = weekendEnabled && (day === 0 || day === 6);
 
-  return weekend || weekdayLate;
+  if (isWeekend) return true;
+
+  // Example:
+  // start 20, end 6  => out of hours from 20:00 to 05:59
+  if (weekdayStartHour > weekdayEndHour) {
+    return hour >= weekdayStartHour || hour < weekdayEndHour;
+  }
+
+  // Example:
+  // start 18, end 22 => out of hours from 18:00 to 21:59
+  if (weekdayStartHour < weekdayEndHour) {
+    return hour >= weekdayStartHour && hour < weekdayEndHour;
+  }
+
+  // If same hour, treat as disabled
+  return false;
 }
 
 export async function POST(request: Request) {
@@ -78,15 +92,22 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: settingsRow } = await supabase
+    const { data: pricingSettings, error: pricingError } = await supabase
       .from("pricing_settings")
       .select("weekday_start_hour, weekday_end_hour, weekend_enabled")
       .limit(1)
       .single();
 
-    const weekdayStartHour = Number(settingsRow?.weekday_start_hour ?? 20);
-    const weekdayEndHour = Number(settingsRow?.weekday_end_hour ?? 6);
-    const weekendEnabled = Boolean(settingsRow?.weekend_enabled ?? true);
+    if (pricingError || !pricingSettings) {
+      return NextResponse.json(
+        { error: "Pricing settings not found" },
+        { status: 500 }
+      );
+    }
+
+    const weekdayStartHour = Number(pricingSettings.weekday_start_hour ?? 20);
+    const weekdayEndHour = Number(pricingSettings.weekday_end_hour ?? 6);
+    const weekendEnabled = Boolean(pricingSettings.weekend_enabled ?? true);
 
     const mapsRes = await fetch(
       "https://routes.googleapis.com/directions/v2:computeRoutes",
@@ -123,14 +144,15 @@ export async function POST(request: Request) {
     const calloutFee = Number(serviceRow.callout_fee || 0);
     const outOfHoursExtra = Number(serviceRow.out_of_hours_extra || 0);
 
+    const now = new Date();
     const outOfHours = isOutOfHours(
-      new Date(),
+      now,
       weekdayStartHour,
       weekdayEndHour,
       weekendEnabled
     );
 
-    let total = baseFare + distanceMiles * perMile + calloutFee;
+    let total = baseFare + calloutFee + distanceMiles * perMile;
 
     if (outOfHours) {
       total += outOfHoursExtra;
@@ -164,11 +186,11 @@ export async function POST(request: Request) {
       success: true,
       quote: total,
       distance: distanceMiles,
+      out_of_hours: outOfHours,
       service: {
         name: serviceRow.name,
         slug: serviceRow.slug,
       },
-      out_of_hours: outOfHours,
       data,
     });
   } catch (err: any) {
