@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server";
 import { supabase } from "../../../lib/supabase";
 
-function isOutOfHours(date: Date) {
-  const day = date.getDay(); // 0 = Sunday, 6 = Saturday
+function isOutOfHours(
+  date: Date,
+  weekdayStartHour: number,
+  weekdayEndHour: number,
+  weekendEnabled: boolean
+) {
+  const day = date.getDay(); // 0 Sunday, 6 Saturday
   const hour = date.getHours();
 
-  const weekend = day === 0 || day === 6;
-  const lateNight = hour >= 20 || hour < 6;
+  const weekend = weekendEnabled && (day === 0 || day === 6);
+  const weekdayLate = hour >= weekdayStartHour || hour < weekdayEndHour;
 
-  return weekend || lateNight;
+  return weekend || weekdayLate;
 }
 
 export async function POST(request: Request) {
@@ -73,6 +78,16 @@ export async function POST(request: Request) {
       );
     }
 
+    const { data: settingsRow } = await supabase
+      .from("pricing_settings")
+      .select("weekday_start_hour, weekday_end_hour, weekend_enabled")
+      .limit(1)
+      .single();
+
+    const weekdayStartHour = Number(settingsRow?.weekday_start_hour ?? 20);
+    const weekdayEndHour = Number(settingsRow?.weekday_end_hour ?? 6);
+    const weekendEnabled = Boolean(settingsRow?.weekend_enabled ?? true);
+
     const mapsRes = await fetch(
       "https://routes.googleapis.com/directions/v2:computeRoutes",
       {
@@ -83,12 +98,8 @@ export async function POST(request: Request) {
           "X-Goog-FieldMask": "routes.distanceMeters",
         },
         body: JSON.stringify({
-          origin: {
-            address: pickupPostcode,
-          },
-          destination: {
-            address: dropoffPostcode,
-          },
+          origin: { address: pickupPostcode },
+          destination: { address: dropoffPostcode },
           travelMode: "DRIVE",
         }),
       }
@@ -112,7 +123,12 @@ export async function POST(request: Request) {
     const calloutFee = Number(serviceRow.callout_fee || 0);
     const outOfHoursExtra = Number(serviceRow.out_of_hours_extra || 0);
 
-    const outOfHours = isOutOfHours(new Date());
+    const outOfHours = isOutOfHours(
+      new Date(),
+      weekdayStartHour,
+      weekdayEndHour,
+      weekendEnabled
+    );
 
     let total = baseFare + distanceMiles * perMile + calloutFee;
 
@@ -151,11 +167,6 @@ export async function POST(request: Request) {
       service: {
         name: serviceRow.name,
         slug: serviceRow.slug,
-        base_fare: baseFare,
-        per_mile: perMile,
-        minimum_charge: minimumCharge,
-        callout_fee: calloutFee,
-        out_of_hours_extra: outOfHoursExtra,
       },
       out_of_hours: outOfHours,
       data,
