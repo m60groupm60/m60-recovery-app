@@ -56,14 +56,12 @@ export default function QuotePage() {
   }, []);
 
   const selectedService = useMemo(() => {
-    return services.find((s) => s.slug === serviceType) || null;
+    return services.find((service) => service.slug === serviceType) || null;
   }, [services, serviceType]);
 
-  // 🔥 FIXED: universal slug check
   const isEmergency =
-    selectedService?.slug
-      ?.toLowerCase()
-      .replace(/-/g, "_") === "emergency_breakdown";
+    selectedService?.slug?.toLowerCase().replace(/-/g, "_") ===
+    "emergency_breakdown";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,111 +137,190 @@ Quote: £${quote ?? ""}`
   );
 
   return (
-    <main className="min-h-screen bg-[#050816] px-6 py-10 pt-28 text-white">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,106,0,0.18),transparent_28%),linear-gradient(180deg,#050816_0%,#0B1220_55%,#050816_100%)] px-6 py-10 pt-28 text-white">
       <div className="mx-auto max-w-7xl">
-        <div className="grid gap-8 lg:grid-cols-2">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-            <h1 className="text-4xl font-semibold">Get your quote</h1>
+        <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="rounded-[36px] border border-white/10 bg-white/[0.04] p-8 shadow-[0_0_40px_rgba(0,0,0,0.35)] backdrop-blur md:p-10">
+            <div className="inline-flex rounded-full border border-orange-500/20 bg-orange-500/10 px-4 py-2 text-sm uppercase tracking-[0.18em] text-orange-300">
+              Instant online quote
+            </div>
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-              <input
-                placeholder="Full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-xl px-4 py-3 text-black"
-              />
+            <h1 className="mt-6 text-5xl font-semibold tracking-tight md:text-6xl">
+              Get your quote
+            </h1>
 
-              <input
-                placeholder="Phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full rounded-xl px-4 py-3 text-black"
-              />
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-300">
+              Enter your details, choose a service, and get a live recovery quote instantly.
+            </p>
 
-              {/* SERVICE SELECT */}
-              {loadingServices ? (
-                <div>Loading services...</div>
-              ) : (
-                <select
-                  value={serviceType}
-                  onChange={(e) => setServiceType(e.target.value)}
-                  className="w-full rounded-xl px-4 py-3 text-black"
-                >
-                  {services.map((s) => (
-                    <option key={s.id} value={s.slug}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              )}
+            <form onSubmit={handleSubmit} className="mt-10 space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-300">
+                  Full name
+                </label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Michael Dyson"
+                  className="w-full rounded-2xl border border-white/10 bg-slate-100 px-5 py-4 text-lg text-slate-950 placeholder:text-slate-500 outline-none transition focus:border-orange-400"
+                />
+              </div>
 
-              {/* 🚨 EMERGENCY BANNER */}
-              {isEmergency && (
-                <div className="rounded-xl border border-red-500 bg-red-500/10 p-4 text-red-200">
-                  <div className="flex gap-2">
-                    <span>⚠️</span>
-                    <div>
-                      <p className="font-semibold">
-                        For Smart Motorway Emergencies – Dial 999 Immediately
-                      </p>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-300">
+                  Phone
+                </label>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="07903 784424"
+                  className="w-full rounded-2xl border border-white/10 bg-slate-100 px-5 py-4 text-lg text-slate-950 placeholder:text-slate-500 outline-none transition focus:border-orange-400"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-300">
+                  Service type
+                </label>
+
+                {loadingServices ? (
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-slate-300">
+                    Loading service types...
+                  </div>
+                ) : (
+                  <select
+                    value={serviceType}
+                    onChange={(e) => setServiceType(e.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-slate-100 px-5 py-4 text-lg text-slate-950 outline-none transition focus:border-orange-400"
+                  >
+                    {services.map((service) => (
+                      <option key={service.id} value={service.slug}>
+                        {service.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                {isEmergency && (
+                  <div className="mt-4 rounded-2xl border border-red-500/50 bg-gradient-to-r from-red-600/20 to-red-500/10 p-5 text-red-100 shadow-[0_0_25px_rgba(255,0,0,0.25)]">
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl leading-none">⚠️</span>
+                      <div>
+                        <p className="text-lg font-semibold">
+                          For Smart Motorway Emergencies – Dial 999 Immediately
+                        </p>
+                        <p className="mt-2 text-sm text-red-200/90">
+                          If you are stopped in a live lane or facing an immediate motorway danger, call 999 first before requesting recovery.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
-              <input
-                placeholder="Pickup postcode"
-                value={pickup}
-                onChange={(e) => setPickup(e.target.value)}
-                className="w-full rounded-xl px-4 py-3 text-black"
-              />
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-300">
+                  Pickup postcode
+                </label>
+                <input
+                  value={pickup}
+                  onChange={(e) => setPickup(e.target.value)}
+                  placeholder="Pickup postcode (e.g. M11 4JG)"
+                  className="w-full rounded-2xl border border-white/10 bg-slate-100 px-5 py-4 text-lg text-slate-950 placeholder:text-slate-500 outline-none transition focus:border-orange-400"
+                />
+              </div>
 
-              <input
-                placeholder="Dropoff postcode"
-                value={dropoff}
-                onChange={(e) => setDropoff(e.target.value)}
-                className="w-full rounded-xl px-4 py-3 text-black"
-              />
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-300">
+                  Dropoff postcode
+                </label>
+                <input
+                  value={dropoff}
+                  onChange={(e) => setDropoff(e.target.value)}
+                  placeholder="Dropoff postcode (e.g. OL10 2EF)"
+                  className="w-full rounded-2xl border border-white/10 bg-slate-100 px-5 py-4 text-lg text-slate-950 placeholder:text-slate-500 outline-none transition focus:border-orange-400"
+                />
+              </div>
 
-              <button className="w-full rounded-xl bg-orange-500 py-4 font-semibold">
+              <button
+                type="submit"
+                disabled={loading || loadingServices || services.length === 0}
+                className="w-full rounded-2xl bg-[#FF6A00] px-6 py-5 text-xl font-semibold text-white shadow-[0_0_30px_rgba(255,106,0,0.22)] transition hover:-translate-y-0.5 hover:bg-[#ff7b24] disabled:cursor-not-allowed disabled:opacity-60"
+              >
                 {loading ? "Calculating..." : "Get Quote"}
               </button>
 
-              {/* 🚨 CALL BUTTON */}
               {isEmergency && (
                 <a
                   href="tel:999"
-                  className="block w-full rounded-xl bg-red-600 py-4 text-center font-semibold"
+                  className="inline-flex w-full items-center justify-center rounded-2xl bg-red-600 px-6 py-5 text-xl font-semibold text-white shadow-[0_0_25px_rgba(255,0,0,0.25)] transition hover:bg-red-500"
                 >
                   Call 999 Now
                 </a>
               )}
             </form>
 
-            {error && <p className="mt-4 text-red-400">{error}</p>}
+            {error && (
+              <div className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-red-200">
+                {error}
+              </div>
+            )}
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-            <h2 className="text-2xl font-semibold">Result</h2>
-
-            <p className="mt-4">
-              Distance: {distance !== null ? `${distance} miles` : "-"}
+          <aside className="rounded-[36px] border border-white/10 bg-[#0c1321]/95 p-8 shadow-[0_0_40px_rgba(0,0,0,0.35)]">
+            <p className="text-sm uppercase tracking-[0.22em] text-orange-300">
+              Result
             </p>
 
-            <p className="mt-2 text-3xl font-semibold">
-              {quote !== null ? `£${quote}` : "-"}
-            </p>
+            <h2 className="mt-4 text-3xl font-semibold">
+              Your estimate
+            </h2>
 
-            {quote && (
+            <div className="mt-8 space-y-4">
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+                <p className="text-sm text-slate-400">Service</p>
+                <p className="mt-2 text-2xl font-semibold">
+                  {selectedService?.name || "-"}
+                </p>
+              </div>
+
+              <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+                <p className="text-sm text-slate-400">Distance</p>
+                <p className="mt-2 text-3xl font-semibold">
+                  {distance !== null ? `${distance} miles` : "-"}
+                </p>
+              </div>
+
+              <div className="rounded-3xl bg-[#FF6A00] p-5 text-white shadow-[0_0_30px_rgba(255,106,0,0.25)]">
+                <p className="text-sm opacity-90">Quote</p>
+                <p className="mt-2 text-4xl font-semibold">
+                  {quote !== null ? `£${quote}` : "-"}
+                </p>
+              </div>
+
+              {selectedService && (
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+                  <p className="text-sm text-slate-400">Pricing rule</p>
+                  <p className="mt-2 text-lg font-semibold">
+                    Base fare £{Number(selectedService.base_fare).toFixed(0)} + £
+                    {Number(selectedService.per_mile).toFixed(2)}/mile
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {distance !== null && quote !== null && (
               <a
                 href={`https://wa.me/447908831617?text=${whatsappText}`}
-                className="mt-6 block rounded-xl bg-white py-4 text-center text-black"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-8 inline-flex w-full items-center justify-center rounded-2xl bg-white px-6 py-4 text-lg font-semibold text-slate-950 transition hover:bg-slate-200"
               >
                 Send to WhatsApp
               </a>
             )}
-          </div>
-        </div>
+          </aside>
+        </section>
       </div>
     </main>
   );
