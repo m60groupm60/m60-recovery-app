@@ -196,6 +196,22 @@ Quote: £${quote ?? ""}`
                     ))}
                   </select>
                 )}
+
+                {selectedService?.slug === "emergency_breakdown" && (
+                  <div className="mt-4 rounded-2xl border border-red-500/50 bg-gradient-to-r from-red-600/20 to-red-500/10 p-5 text-red-100 shadow-[0_0_25px_rgba(255,0,0,0.25)]">
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl leading-none">⚠️</span>
+                      <div>
+                        <p className="text-lg font-semibold">
+                          For Smart Motorway Emergencies – Dial 999 Immediately
+                        </p>
+                        <p className="mt-2 text-sm text-red-200/90">
+                          If you are stopped in a live lane or facing an immediate motorway danger, call 999 first before requesting recovery.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -229,6 +245,15 @@ Quote: £${quote ?? ""}`
               >
                 {loading ? "Calculating..." : "Calculate quote"}
               </button>
+
+              {selectedService?.slug === "emergency_breakdown" && (
+                <a
+                  href="tel:999"
+                  className="inline-flex w-full items-center justify-center rounded-2xl bg-red-600 px-6 py-5 text-xl font-semibold text-white shadow-[0_0_25px_rgba(255,0,0,0.25)] transition hover:bg-red-500"
+                >
+                  Call 999 Now
+                </a>
+              )}
             </form>
 
             {error && (
