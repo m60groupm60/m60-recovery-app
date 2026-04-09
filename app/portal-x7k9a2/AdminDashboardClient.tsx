@@ -13,6 +13,7 @@ type Quote = {
   distance_miles: number;
   status: string;
   created_at: string;
+  out_of_hours?: boolean;
 };
 
 export default function AdminDashboardClient({
@@ -30,6 +31,7 @@ export default function AdminDashboardClient({
     off_road_rescue: "Off-Road Rescue",
     vehicle_transportation: "Vehicle Transportation",
     new_car_purchases: "New Car Purchases",
+    emergency_breakdown: "Emergency Breakdown",
   };
 
   const filteredQuotes = useMemo(() => {
@@ -57,6 +59,18 @@ export default function AdminDashboardClient({
     0
   );
   const newLeads = filteredQuotes.filter((q) => q.status === "new").length;
+  const emergencyJobs = filteredQuotes.filter(
+    (q) => q.service_type === "emergency_breakdown"
+  ).length;
+
+  const revenueByService = filteredQuotes.reduce<Record<string, number>>(
+    (acc, q) => {
+      const key = serviceLabels[q.service_type] || q.service_type;
+      acc[key] = (acc[key] || 0) + Number(q.quoted_amount || 0);
+      return acc;
+    },
+    {}
+  );
 
   const showToast = (message: string) => {
     setToast(message);
@@ -133,7 +147,7 @@ export default function AdminDashboardClient({
           </div>
         </div>
 
-        <div className="mb-6 grid gap-4 md:grid-cols-3">
+        <div className="mb-6 grid gap-4 md:grid-cols-4">
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur">
             <div className="text-sm text-slate-400">Total Quotes</div>
             <div className="mt-2 text-3xl font-semibold">{totalQuotes}</div>
@@ -152,6 +166,27 @@ export default function AdminDashboardClient({
               {newLeads}
             </div>
           </div>
+
+          <div className="rounded-3xl border border-red-500/30 bg-red-500/10 p-5 shadow-[0_0_30px_rgba(255,0,0,0.08)]">
+            <div className="text-sm text-red-200">Emergency Jobs</div>
+            <div className="mt-2 text-3xl font-semibold text-white">
+              {emergencyJobs}
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {Object.entries(revenueByService).map(([service, value]) => (
+            <div
+              key={service}
+              className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur"
+            >
+              <div className="text-sm text-slate-400">{service}</div>
+              <div className="mt-2 text-2xl font-semibold">
+                £{value.toFixed(0)}
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="mb-6 rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur">
@@ -195,21 +230,36 @@ export default function AdminDashboardClient({
                   } quote is £${q.quoted_amount}. Pickup: ${q.pickup_address}. Drop-off: ${q.dropoff_address}.`
                 );
 
+                const isEmergency = q.service_type === "emergency_breakdown";
+                const isHotLead = isEmergency || Number(q.quoted_amount || 0) > 100;
+
                 return (
                   <tr
                     key={q.id}
-                    className="border-t border-white/10 transition hover:bg-white/[0.05]"
+                    className={`border-t border-white/10 transition hover:bg-white/[0.05] ${
+                      isEmergency ? "bg-red-500/10" : ""
+                    }`}
                   >
                     <td className="px-4 py-4">
                       <div className="font-medium">{q.customer_name}</div>
                       <div className="text-sm text-slate-400">
                         {q.customer_phone}
                       </div>
+                      {isHotLead && (
+                        <div className="mt-2 inline-flex rounded-full bg-orange-500/20 px-2 py-1 text-xs font-semibold text-orange-200">
+                          🔥 HIGH VALUE
+                        </div>
+                      )}
                     </td>
 
                     <td className="px-4 py-4 text-sm">
                       <div>{q.pickup_address}</div>
                       <div className="text-slate-400">to {q.dropoff_address}</div>
+                      {q.out_of_hours && (
+                        <div className="mt-2 inline-flex rounded-full bg-yellow-500/15 px-2 py-1 text-xs font-semibold text-yellow-200">
+                          Out of hours
+                        </div>
+                      )}
                     </td>
 
                     <td className="px-4 py-4 text-sm">
@@ -268,8 +318,7 @@ export default function AdminDashboardClient({
         </div>
 
         <p className="mt-4 text-sm text-slate-400">
-          WhatsApp buttons open a pre-filled message. Full automatic sending
-          needs WhatsApp Business API.
+          WhatsApp buttons open automatically after quote on the customer page, and admin can still open each lead manually here.
         </p>
       </div>
 

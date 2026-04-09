@@ -10,6 +10,9 @@ type ServiceType = {
   per_mile: number;
   is_active: boolean;
   sort_order: number;
+  minimum_charge?: number;
+  callout_fee?: number;
+  out_of_hours_extra?: number;
 };
 
 export default function QuotePage() {
@@ -24,6 +27,14 @@ export default function QuotePage() {
   const [loading, setLoading] = useState(false);
   const [loadingServices, setLoadingServices] = useState(true);
   const [error, setError] = useState("");
+  const [pricingInfo, setPricingInfo] = useState<{
+    base_fare?: number;
+    per_mile?: number;
+    minimum_charge?: number;
+    callout_fee?: number;
+    out_of_hours_extra?: number;
+  } | null>(null);
+  const [outOfHours, setOutOfHours] = useState(false);
 
   const ukPostcodeRegex =
     /^([A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2})$/i;
@@ -93,6 +104,8 @@ export default function QuotePage() {
     setError("");
     setDistance(null);
     setQuote(null);
+    setPricingInfo(null);
+    setOutOfHours(false);
 
     try {
       const res = await fetch("/api/quote", {
@@ -118,6 +131,24 @@ export default function QuotePage() {
 
       setDistance(data.distance);
       setQuote(data.quote);
+      setPricingInfo(data.service || null);
+      setOutOfHours(Boolean(data.out_of_hours));
+
+      const whatsappText = encodeURIComponent(
+        `Hello M60 Recovery & Rescue, I would like a quote.
+Name: ${name}
+Phone: ${phone}
+Service: ${selectedService?.name || ""}
+Pickup: ${pickupValue}
+Drop-off: ${dropoffValue}
+Distance: ${data.distance}
+Quote: £${data.quote}`
+      );
+
+      window.open(
+        `https://wa.me/447908831617?text=${whatsappText}`,
+        "_blank"
+      );
     } catch {
       setError("Could not connect to the quote service.");
     } finally {
@@ -298,13 +329,17 @@ Quote: £${quote ?? ""}`
                 </p>
               </div>
 
-              {selectedService && (
+              {pricingInfo && (
                 <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
                   <p className="text-sm text-slate-400">Pricing rule</p>
-                  <p className="mt-2 text-lg font-semibold">
-                    Base fare £{Number(selectedService.base_fare).toFixed(0)} + £
-                    {Number(selectedService.per_mile).toFixed(2)}/mile
-                  </p>
+                  <div className="mt-3 space-y-2 text-sm text-slate-300">
+                    <p>Base fare: £{Number(pricingInfo.base_fare || 0).toFixed(0)}</p>
+                    <p>Per mile: £{Number(pricingInfo.per_mile || 0).toFixed(2)}</p>
+                    <p>Minimum charge: £{Number(pricingInfo.minimum_charge || 0).toFixed(0)}</p>
+                    <p>Callout fee: £{Number(pricingInfo.callout_fee || 0).toFixed(0)}</p>
+                    <p>Out of hours extra: £{Number(pricingInfo.out_of_hours_extra || 0).toFixed(0)}</p>
+                    <p>{outOfHours ? "Out of hours pricing applied" : "Standard hours pricing"}</p>
+                  </div>
                 </div>
               )}
             </div>

@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 import { supabase } from "../../../lib/supabase";
 
+function isOutOfHours(date: Date) {
+  const day = date.getDay(); // 0 = Sunday, 6 = Saturday
+  const hour = date.getHours();
+
+  const weekend = day === 0 || day === 6;
+  const lateNight = hour >= 20 || hour < 6;
+
+  return weekend || lateNight;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -49,7 +59,9 @@ export async function POST(request: Request) {
 
     const { data: serviceRow, error: serviceError } = await supabase
       .from("service_types")
-      .select("name, slug, base_fare, per_mile, is_active")
+      .select(
+        "name, slug, base_fare, per_mile, minimum_charge, callout_fee, out_of_hours_extra, is_active"
+      )
       .eq("slug", serviceSlug)
       .eq("is_active", true)
       .single();
@@ -96,8 +108,20 @@ export async function POST(request: Request) {
 
     const baseFare = Number(serviceRow.base_fare || 0);
     const perMile = Number(serviceRow.per_mile || 0);
+    const minimumCharge = Number(serviceRow.minimum_charge || 0);
+    const calloutFee = Number(serviceRow.callout_fee || 0);
+    const outOfHoursExtra = Number(serviceRow.out_of_hours_extra || 0);
 
-    const total = Math.round(baseFare + distanceMiles * perMile);
+    const outOfHours = isOutOfHours(new Date());
+
+    let total = baseFare + distanceMiles * perMile + calloutFee;
+
+    if (outOfHours) {
+      total += outOfHoursExtra;
+    }
+
+    total = Math.max(total, minimumCharge);
+    total = Math.round(total);
 
     const { data, error } = await supabase
       .from("quotes")
@@ -107,7 +131,7 @@ export async function POST(request: Request) {
         pickup_address: pickupPostcode,
         dropoff_address: dropoffPostcode,
         service_type: serviceRow.slug,
-        out_of_hours: false,
+        out_of_hours: outOfHours,
         quoted_amount: total,
         distance_miles: distanceMiles,
         payment_status: "pending",
@@ -129,7 +153,11 @@ export async function POST(request: Request) {
         slug: serviceRow.slug,
         base_fare: baseFare,
         per_mile: perMile,
+        minimum_charge: minimumCharge,
+        callout_fee: calloutFee,
+        out_of_hours_extra: outOfHoursExtra,
       },
+      out_of_hours: outOfHours,
       data,
     });
   } catch (err: any) {
